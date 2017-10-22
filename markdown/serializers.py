@@ -103,6 +103,17 @@ def _escape_cdata(text):
         _raise_serialization_error(text)
 
 
+def _escape_wikicdata(text):
+    try:
+        if "{" in text:
+            text = text.replace("{", "\{")
+        if "}" in text:
+            text = text.replace("}", "\}")
+        return text
+    except (TypeError, AttributeError):  # pragma: no cover
+        _raise_serialization_error(text)
+
+
 def _escape_attrib(text):
     # escape attribute value
     try:
@@ -192,6 +203,32 @@ def _serialize_html(write, elem, qnames, namespaces, format):
         write(_escape_cdata(elem.tail))
 
 
+def _serialize_wiki(write, elem):
+    tag = elem.tag
+    text = elem.text
+    if tag is Comment:
+        pass
+    elif tag is ProcessingInstruction:
+        pass
+    else:
+        if tag is None:
+            if text:
+                write(_escape_wikicdata(text))
+            for e in elem:
+                _serialize_wiki(write, e)
+        else:
+            if tag in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'):
+                write(tag + ". ")
+            items = elem.items()
+            assert not items
+            if text:
+                write(_escape_wikicdata(text))
+            for e in elem:
+                _serialize_wiki(write, e)
+    if elem.tail:
+        write(_escape_wikicdata(elem.tail))
+
+
 def _write_html(root,
                 encoding=None,
                 default_namespace=None,
@@ -205,6 +242,14 @@ def _write_html(root,
         return "".join(data)
     else:
         return _encode("".join(data))
+
+
+def _write_wiki(root):
+    assert root is not None
+    data = []
+    write = data.append
+    _serialize_wiki(write, root)
+    return "".join(data)
 
 
 # --------------------------------------------------------------------
@@ -280,3 +325,7 @@ def to_html_string(element):
 
 def to_xhtml_string(element):
     return _write_html(ElementTree(element).getroot(), format="xhtml")
+
+
+def to_atlassian_wiki(element):
+    return _write_wiki(ElementTree(element).getroot())

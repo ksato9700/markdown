@@ -45,7 +45,7 @@ from .treeprocessors import build_treeprocessors
 from .inlinepatterns import build_inlinepatterns
 from .postprocessors import build_postprocessors
 from .extensions import Extension
-from .serializers import to_html_string, to_xhtml_string
+from .serializers import to_html_string, to_xhtml_string, to_atlassian_wiki
 
 __all__ = ['Markdown', 'markdown', 'markdownFromFile']
 
@@ -73,6 +73,7 @@ class Markdown(object):
         'xhtml':  to_xhtml_string,
         'xhtml1': to_xhtml_string,
         'xhtml5': to_xhtml_string,
+        'wiki':   to_atlassian_wiki,
     }
 
     def __init__(self, *args, **kwargs):
@@ -149,7 +150,7 @@ class Markdown(object):
 
         self.registeredExtensions = []
         self.docType = ""
-        self.stripTopLevelTags = True
+        self.stripTopLevelTags = kwargs.get('output_format', "") != 'wiki'
 
         self.build_parser()
 
