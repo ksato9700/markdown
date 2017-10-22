@@ -217,12 +217,43 @@ def _serialize_wiki(write, elem):
             for e in elem:
                 _serialize_wiki(write, e)
         else:
+            items = dict(elem.items())
             if tag in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'):
                 write(tag + ". ")
-            items = elem.items()
-            assert not items
+            elif tag == 'img':
+                write('!{}!'.format(items['src']))
+            elif tag in ('code', 'pre'):
+                write('{code}')
+            elif tag == 'a':
+                write('[')
+            elif tag == 'li':
+                write('* ')
+            elif tag == 'strong':
+                write('*')
+            elif tag == 'em':
+                write('_')
+            elif tag == 'blockquote':
+                write('{quote}')
+            elif tag == 'br':
+                write('\n')
+            elif tag == 'hr':
+                write('----\n')
+            elif tag in ('div', 'p', 'ul'):
+                pass
+            else:
+                raise RuntimeError('unknown tag: {}({})'.format(tag, items))
             if text:
                 write(_escape_wikicdata(text))
+            if tag in ('code', 'pre'):
+                write('{code}')
+            elif tag == 'a':
+                write('|{}]'.format(items['href']))
+            elif tag == 'strong':
+                write('*')
+            elif tag == 'em':
+                write('_')
+            elif tag == 'blockquote':
+                write('{quote}')
             for e in elem:
                 _serialize_wiki(write, e)
     if elem.tail:
